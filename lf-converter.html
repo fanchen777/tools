@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>换行符转换器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .input-section {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .convert-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .convert-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .clear-btn {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .clear-btn:hover {
+            background: #e0e0e0;
+        }
+        
+        .copy-btn {
+            background: #10b981;
+            color: white;
+        }
+        
+        .copy-btn:hover {
+            background: #059669;
+        }
+        
+        .output-section {
+            margin-top: 20px;
+        }
+        
+        .output-textarea {
+            background: #f8f9fa;
+            border-color: #667eea;
+            white-space: pre-wrap;
+        }
+        
+        .preview-box {
+            margin-top: 20px;
+            padding: 15px;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            background: #fff;
+            min-height: 100px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .preview-label {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .stats {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #666;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 18px;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 换行符转换器</h1>
+        <p class="subtitle">将文本中的换行符替换为 \n 转义序列</p>
+        
+        <div class="input-section">
+            <label for="input">输入文本：</label>
+            <textarea id="input" placeholder="在这里粘贴包含换行的文本..."></textarea>
+        </div>
+        
+        <div class="button-group">
+            <button class="convert-btn" onclick="convert()">换行转 \n</button>
+            <button class="convert-btn" onclick="convertBack()"> \n 转换行</button>
+            <button class="clear-btn" onclick="clearAll()">清空</button>
+            <button class="copy-btn" onclick="copyResult()">复制结果</button>
+        </div>
+        
+        <div class="button-group" style="margin-top: 10px;">
+            <button class="clear-btn" onclick="loadExample()">📋 加载测试示例</button>
+        </div>
+        
+        <div class="output-section">
+            <label for="output">转换结果（文本框）：</label>
+            <textarea id="output" class="output-textarea" readonly placeholder="转换后的文本将显示在这里..."></textarea>
+            
+            <div class="preview-label">👁️ 实际效果预览：</div>
+            <div id="preview" class="preview-box">预览区域 - 转换后将显示在这里</div>
+        </div>
+        
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-item">
+                <div class="stat-value" id="originalLines">0</div>
+                <div>原始行数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="convertedLength">0</div>
+                <div>字符长度</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="newlinesConverted">0</div>
+                <div>换行符转换数</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast">✅ 已复制到剪贴板</div>
+    
+    <script>
+        function convert() {
+            const input = document.getElementById('input').value;
+            
+            if (!input) {
+                showToast('⚠️ 请先输入文本');
+                return;
+            }
+            
+            // 计算原始行数
+            const originalLines = input.split('\n').length;
+            
+            // 计算换行符数量
+            const newlineCount = (input.match(/\n/g) || []).length;
+            
+            // 替换换行符为 \n
+            const result = input.replace(/\n/g, '\\n');
+            
+            document.getElementById('output').value = result;
+            document.getElementById('preview').textContent = result;
+            
+            // 显示统计
+            document.getElementById('stats').style.display = 'flex';
+            document.getElementById('originalLines').textContent = originalLines;
+            document.getElementById('convertedLength').textContent = result.length;
+            document.getElementById('newlinesConverted').textContent = newlineCount;
+            
+            showToast('✅ 换行转 \\n 完成');
+        }
+        
+        function convertBack() {
+            const input = document.getElementById('input').value;
+            
+            if (!input) {
+                showToast('⚠️ 请先输入文本');
+                return;
+            }
+            
+            // 计算 \n 数量
+            const escapedNewlineCount = (input.match(/\\n/g) || []).length;
+            
+            // 替换 \n 为实际换行符
+            const result = input.replace(/\\n/g, '\n');
+            
+            document.getElementById('output').value = result;
+            // 预览框：先转义 HTML 特殊字符，再把换行符转为 <br>
+            const previewHtml = result
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\n/g, '<br>');
+            document.getElementById('preview').innerHTML = previewHtml;
+            
+            // 显示统计
+            document.getElementById('stats').style.display = 'flex';
+            document.getElementById('originalLines').textContent = input.split('\n').length;
+            document.getElementById('convertedLength').textContent = result.length;
+            document.getElementById('newlinesConverted').textContent = escapedNewlineCount;
+            
+            showToast('✅ \\n 转换行完成');
+        }
+        
+        function clearAll() {
+            document.getElementById('input').value = '';
+            document.getElementById('output').value = '';
+            document.getElementById('preview').textContent = '预览区域 - 转换后将显示在这里';
+            document.getElementById('stats').style.display = 'none';
+            showToast('🗑️ 已清空');
+        }
+        
+        function copyResult() {
+            const output = document.getElementById('output');
+            
+            if (!output.value) {
+                showToast('⚠️ 没有可复制的内容');
+                return;
+            }
+            
+            output.select();
+            document.execCommand('copy');
+            showToast('✅ 已复制到剪贴板');
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+        
+        // 支持 Ctrl+Enter 快速转换
+        document.getElementById('input').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                convert();
+            }
+        });
+        
+        // 加载测试示例
+        function loadExample() {
+            const example = '## 📋 问题摘要 用户询问生态环境监测机构（部门）开展档案管理工作的具体依据是什么。\\n## 📖 政策依据 - 段落 [1] - 《生态环境监测档案管理规范》（核心主题：标准制定目的与依据）\\n## 🔍 专业解读 - **核心依据文件**：根据现有政策库信息，生态环境监测机构进行档案管理的直接依据是名为《生态环境监测档案管理规范》的标准。';
+            document.getElementById('input').value = example;
+            showToast('📋 已加载测试示例');
+        }
+    </script>
+</body>
+</html>
